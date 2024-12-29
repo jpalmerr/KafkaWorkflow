@@ -39,6 +39,7 @@ Now run our scala producer program
 ```bash
 sbt run
 ```
+When prompted, we should run the `KafkaProducerApp`
 
 You can search for logs `successfully pushed records onto kafka topic people-topic`.
 
@@ -46,7 +47,6 @@ To perform a sanity check when in debug mode, lets consume 10 messages and print
 - `f1474ca118fa` in the givne example refers to the container ID.
 - You can retrieve this using `docker ps`.
 - You must replace with your container id.
--
 ```bash
 docker exec -it f1474ca118fa /opt/kafka/bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic people-topic --from-beginning --max-messages 10 --property print.key=true
 ```
@@ -68,6 +68,23 @@ ZT8C50RBQLTTCZKC	{"_id":"ZT8C50RBQLTTCZKC","name":"Kristen Samson","dob":"2022-1
 51AR0Y984N93CQYT	{"_id":"51AR0Y984N93CQYT","name":"Vern Yoo","dob":"2020-08-17","address":{"street":"5883 Waterford Lane","town":"Porthcawl","postcode":"NW0 2KG"},"telephone":"+58-6901-373-061","pets":["Toby","Leo"],"score":6.6,"email":"sterling5@bon.com","url":"https://cork.info.zm","description":"setting optimum troubleshooting drill thousand pci ts jeep stones wr throat compact tracy server besides feelings comparisons receivers groundwater gc","verified":true,"salary":25819}
 Processed a total of 10 messages
 ```
+
+Now run our scala consumer program
+
+```bash
+sbt run
+```
+
+When prompted, we should run the `KafkaConsumerApp`
+
+This will spin up a running server. We can then test the api by opening our browser and heading to
+
+```
+http://localhost:8080/topic/people-topic?offset={{int}}&count={{count}}
+```
+
+From here, we should receive an appropriate json response.
+We should see that we receive count (or up to count if partition doesn't reach count) responses, for each partition.
 
 It is then important we shut down our docker container safely. When you are finished using the kafka environment, use the following commands
 
