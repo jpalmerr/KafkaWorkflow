@@ -1,6 +1,22 @@
 # Local Kafka Workflow
 
-First we want to run our Kafka broker locally. We could do so with following command
+### Cloning the repo
+
+Via ssh, run 
+
+```
+git clone git@github.com:jpalmerr/KafkaWorkflow.git
+```
+
+### Environment set up
+
+Note these instructions assume both Kafka and Scala are installed locally. 
+- kafka version `3.7.0`
+- scala version `2.13.15`
+
+To run this app in accordance to the requirements, we must have a kafka broker running locally.
+
+To do so you could run the following command.
 
 ```bash
 docker run -p 9092:9092 apache/kafka:3.7.0
@@ -12,9 +28,12 @@ However, we can name our broker and run it in the background using command
 docker run -d --name kafka-broker -p 9092:9092 apache/kafka:3.7.0
 ```
 
-Then we must create a Kafka topic, ensuring we add appropriate topic level settings.
+The requirements demand a kafka topic is created on the local broker. We must add the appropriate topic level settings,
+in particular 
+- partitions: `3`
+- clean up policy `delete`
 
-We can run this locally using [kafka-topics.sh](https://kafka.apache.org/documentation/#topicconfigs)
+We can do this this locally using [kafka-topics.sh](https://kafka.apache.org/documentation/#topicconfigs).
 
 ```bash
 docker exec -it kafka-broker /opt/kafka/bin/kafka-topics.sh \
@@ -27,19 +46,28 @@ docker exec -it kafka-broker /opt/kafka/bin/kafka-topics.sh \
 ```
 If this has run successfully you should see log `Created topic people-topic`.
 
-Now we can switch to our program.
-We can run the tests of our scala program using
+### Running the app
+
+We can run local unit tests using command
 
 ```bash
 sbt test
 ```
 
-Now run our scala producer program
+The first step of this flow is to run the Producer App. This app 
+- loads our data source `random-people-data.json`
+- push this data onto local kafka broker's topic `people-topic`
+
+Implementation notes:
+- there is a typo in the data source at `postode`.
+- The app handles this accordingly, and fixes it when pushed onto the topic, as opposed to interfering with the data source.
+
+To run the Producer App, use command: 
 
 ```bash
 sbt run
 ```
-When prompted, we should run the `KafkaProducerApp`
+When prompted, elect to run the `KafkaProducerApp`
 
 You can search for logs `successfully pushed records onto kafka topic people-topic`.
 
@@ -70,13 +98,15 @@ ZT8C50RBQLTTCZKC	{"_id":"ZT8C50RBQLTTCZKC","name":"Kristen Samson","dob":"2022-1
 Processed a total of 10 messages
 ```
 
-Now run our scala consumer program
+A response similar to above, will confirm that we have successfully pushed data onto our `people-topic`, and can proceed with our consumer interface. 
+
+To run the Consumer App, use command:  
 
 ```bash
 sbt run
 ```
 
-When prompted, we should run the `KafkaConsumerApp`
+When prompted, elect to run the `KafkaConsumerApp`
 
 This will spin up a running server. We can then test the api by opening our browser and heading to
 
@@ -84,21 +114,13 @@ This will spin up a running server. We can then test the api by opening our brow
 http://localhost:8080/topic/people-topic?offset={{int}}&count={{count}}
 ```
 
-From here, we should receive an appropriate json response.
-We should see that we receive count (or up to count if partition doesn't reach count) responses, for each partition.
+- We should receive an appropriate json response.
+- We should see that we receive count (or up to count if partition doesn't reach count) responses, for each partition (0, 1, 2)
 
+Implementation notes:
+- Both query parameters are optional
 - If offset is not provided, it defaults to 0. This was chosen as offsets are zero based. 
 - If count is not provided, the code will default to 10
-
-It is then important we shut down our docker container safely. When you are finished using the kafka environment, use the following commands
-
-```bash
-docker stop kafka-broker
-```
-
-```bash
-docker rm kafka-broker
-```
 
 ### Example response 
 
@@ -182,4 +204,16 @@ docker rm kafka-broker
     "value": "{\"_id\":\"ZT8C50RBQLTTCZKC\",\"name\":\"Kristen Samson\",\"dob\":\"2022-11-21\",\"address\":{\"street\":\"9471 Martland Avenue\",\"town\":\"Blackpool\",\"postcode\":\"FK02 3NY\"},\"telephone\":\"+212-8084-050-337\",\"pets\":[\"Lilly\",\"Lilly\"],\"score\":4.0,\"email\":\"evette.driscoll1953@yahoo.com\",\"url\":\"http://calibration.yukuhashi.fukuoka.jp\",\"description\":\"valued mobility dallas polar endless editions sky swimming setting closed draft such join reseller space mine lc enquiries expand observed\",\"verified\":true,\"salary\":34932}"
   }
 ]
+```
+
+### Shutting down environment
+
+It is then important we shut down our docker container safely. When you are finished using the kafka environment, use the following commands
+
+```bash
+docker stop kafka-broker
+```
+
+```bash
+docker rm kafka-broker
 ```
