@@ -31,7 +31,7 @@ object ConsumerHandler {
         // group records by partition
         val recordsByPartition: Map[Int, List[ConsumerRecord[String, String]]] = pollOnce.groupBy(_.partition())
 
-        // interpret date - we want first 5 records FOR EACH partition
+        // interpret date - we want first n records FOR EACH partition
         recordsByPartition.flatMap {
           case (partition, records) =>
             // Take the first 'count' records from each partition
