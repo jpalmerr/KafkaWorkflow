@@ -55,12 +55,16 @@ sbt test
 ```
 
 The first step of this flow is to run the Producer App. This app 
-- loads our data source `random-people-data.json`
-- push this data onto local kafka broker's topic `people-topic`
+- Loads our data source `random-people-data.json`
+- Push this data onto local kafka broker's topic `people-topic`
 
 Implementation notes:
-- there is a typo in the data source at `postode`.
-- The app handles this accordingly, and fixes it when pushed onto the topic, as opposed to interfering with the data source.
+- There is a typo in the data source at `postode`.
+  - The app handles this accordingly, and fixes it when pushed onto the topic, as opposed to interfering with the data source.
+- The weakness of this code lies in its resource management. The current implementation does not guarantee atomicity as it has no ability to prevent previously sent records from being pushed,
+  leading to the potential of partial successes.
+  - arguably in this use case that is fine
+  - however, with more time I would likely take a closer look at the producer api to find support for transactions and introduce a cats IO
 
 To run the Producer App, use command: 
 
